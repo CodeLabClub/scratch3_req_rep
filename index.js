@@ -26,8 +26,8 @@ class Scratch3ReqRepBlocks {
         this.runtime = runtime;
 
         this._requestID = 0; // https://github.com/LLK/scratch-vm/blob/develop/src/util/jsonrpc.js#L3
-        this._openRequests = {};
-        this.promiseResolves = {};
+        // this._openRequests = {};
+        this._promiseResolves = {};
         const url = new URL(window.location.href);
         var adapterHost = url.searchParams.get("adapter_host"); // 支持树莓派(分布式使用)
         if (!adapterHost) {
@@ -38,13 +38,13 @@ class Scratch3ReqRepBlocks {
             transports: ["websocket"]
         });
         this.socket.on("sensor", msg => {
-            // console.log(msg.data);
-            const topic = msg.data.topic;
+            // console.log(msg.message);
+            const topic = msg.message.topic;
             if (topic === TOPIC) {
-                this.messageID = msg.data.messageID;
+                this.messageID = msg.message.messageID;
                 // 处理对应id的resolve
-                this.promiseResolves[msg.data.messageID] &&
-                    this.promiseResolves[msg.data.messageID](msg.data.content);
+                this._promiseResolves[msg.message.messageID] &&
+                    this._promiseResolves[msg.message.messageID](msg.message.content);
             }
         });
     }
@@ -98,11 +98,11 @@ class Scratch3ReqRepBlocks {
     }
 
     get_reply_message(messageID) {
-        const timeout = 3000; //ms
+        const timeout = 3000; // ms
         return new Promise((resolve, reject) => {
-            this.promiseResolves[messageID] = resolve; // 抛到外部
+            this._promiseResolves[messageID] = resolve; // 抛到外部
             setTimeout(() => {
-                reject("timeout");
+                reject(`timeout(${timeout}ms)`);
             }, timeout);
         });
     }
